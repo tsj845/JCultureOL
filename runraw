@@ -1,0 +1,6 @@
+#!/bin/sh
+
+SETTINGS=$(stty -g)
+stty raw
+java $1
+stty $SETTINGS
