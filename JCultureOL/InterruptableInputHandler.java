@@ -146,12 +146,30 @@ public class InterruptableInputHandler {
         }
         return result;
     }
+    private void redisplayLine(String prompt, StringBuilder cinput, int curpos) throws IOException {
+        drain.write(new byte[]{0x1b, '[', 'G', 0x1b, '[', 2, 'K'}); // reset line and put cursor at left edge
+        drain.write(Integer.toString(curpos).getBytes()); // TODO: cursor debug
+        byte[] pbytes = prompt.getBytes();
+        drain.write(pbytes); // write the prompt
+        cinput.chars().forEach(n->{try{drain.write(n);}catch(IOException e){}}); // write the input currently entered
+        drain.write(new byte[]{0x1b, '[', (byte)(curpos + pbytes.length), 'G'});
+        drain.flush();
+    }
     /**
-     * reads until the end of the line, all input is handled properly, result will not include the line separator
-     * @return the user input
+     * call is equivalent to {@link InterruptableInputHandler#readLine(String prompt)} where prompt is an empty string
+     * @return
      * @throws IOException
      */
     public String readLine() throws IOException {
+        return readLine("");
+    }
+    /**
+     * reads until the end of the line, all input is handled properly, result will not include the line separator
+     * @param propmt String prompt to display to the user
+     * @return the user input
+     * @throws IOException
+     */
+    public String readLine(String prompt) throws IOException {
         StringBuilder sb = new StringBuilder();
         int curpos = 0;
         int gotten = getChar();
@@ -185,7 +203,7 @@ public class InterruptableInputHandler {
                     }
                     switch (finalc) { // do various things based on the control code entered
                         case ('C'): // (CUR RIGHT) move cursor right for text editing
-                            if (curpos <= sb.length()) {
+                            if (curpos < sb.length()) {
                                 curpos ++;
                             } else {
                                 signalInvalid();
@@ -204,15 +222,35 @@ public class InterruptableInputHandler {
                         default: // unrecognized, do nothing
                             break;
                     }
+                    if (rawterm) {
+                        redisplayLine(prompt, sb, curpos);
+                    }
                 }
                 continue;
             }
-            if (gotten == 127) {}
-            if (rawterm) {
-                drain.write(gotten);
-                drain.flush();
+            if (gotten == 127) {
+                if (curpos > 0) {
+                    curpos --;
+                    sb.deleteCharAt(curpos);
+                } else {
+                    signalInvalid();
+                }
+                if (rawterm) {
+                    redisplayLine(prompt, sb, curpos);
+                }
+                continue;
             }
             sb.insert(curpos, (char)gotten);
+            curpos ++;
+            if (rawterm) {
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                redisplayLine(prompt, sb, curpos);
+            }
             gotten = getChar();
         }
     }

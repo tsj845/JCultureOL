@@ -1,15 +1,19 @@
 // import java.lang.ProcessBuilder.Redirect;
 // import java.util.Arrays;
 
-// import JCultureOL.InterruptableInputHandler;
+import JCultureOL.InterruptableInputHandler;
 
 public class Test {
     public static void main(String[] args) throws Exception {
-        System.out.println("\u0001fb2f");
-        // InterruptableInputHandler inputh = new InterruptableInputHandler(System.in, System.out);
+        // System.out.println("\u0001fb2f");
+        InterruptableInputHandler inputh = new InterruptableInputHandler(System.in, System.out);
         // inputh.makeRaw();
-        // System.out.println(inputh.readLine());
-        // inputh.unmakeRaw();
+        inputh.setRaw();
+        try {
+            System.out.println(inputh.readLine());
+        } finally {
+            // inputh.unmakeRaw();
+        }
         // Process proc = new ProcessBuilder("stty", "-g").redirectInput(Redirect.INHERIT).start();
         // String sttySettings = new String(proc.getInputStream().readAllBytes());
         // new ProcessBuilder("stty", "raw").inheritIO().start().waitFor();
