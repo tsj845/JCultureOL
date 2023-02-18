@@ -5,16 +5,16 @@ import java.io.InputStream;
 /**
  * provides a way for an inputstream to be interrupted by a parent thread allowing a child thread to exit safely
  */
-public class ThreadsafeInputStream extends InputStream {
+public class InterruptableInputStream extends InputStream {
     private InputStream source;
     private volatile boolean interrupted = false;
     private volatile boolean closed = false;
 
-    public ThreadsafeInputStream(InputStream source) {
+    public InterruptableInputStream(InputStream source) {
         this.source = source;
     }
 
-    public ThreadsafeInputStream(InputStream source, boolean interrupted) {
+    public InterruptableInputStream(InputStream source, boolean interrupted) {
         this.source = source;
         this.interrupted = interrupted;
     }
@@ -32,7 +32,7 @@ public class ThreadsafeInputStream extends InputStream {
     }
 
     /**
-     * sets the closed flag and calls {@link ThreadsafeInputStream#interrupt()}
+     * sets the closed flag and calls {@link InterruptableInputStream#interrupt()}
      */
     @Override
     public void close() throws IOException {

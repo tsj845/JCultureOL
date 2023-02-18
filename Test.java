@@ -1,24 +1,25 @@
-import java.io.IOException;
+// import java.lang.ProcessBuilder.Redirect;
+// import java.util.Arrays;
 
-import JCultureOL.ThreadsafeInputStream;
+// import JCultureOL.InterruptableInputHandler;
 
 public class Test {
-    public static void main(String[] args) throws IOException {
-        ThreadsafeInputStream inp = new ThreadsafeInputStream(System.in);
-        Thread th = new Thread(){
-            public void run() {
-                try {
-                Thread.sleep(1500);
-                inp.close();
-                } catch (InterruptedException e) {}
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-        th.start();
-        System.out.println((char)inp.read());
-        th.interrupt();
-        inp.close();
+    public static void main(String[] args) throws Exception {
+        System.out.println("\u0001fb2f");
+        // InterruptableInputHandler inputh = new InterruptableInputHandler(System.in, System.out);
+        // inputh.makeRaw();
+        // System.out.println(inputh.readLine());
+        // inputh.unmakeRaw();
+        // Process proc = new ProcessBuilder("stty", "-g").redirectInput(Redirect.INHERIT).start();
+        // String sttySettings = new String(proc.getInputStream().readAllBytes());
+        // new ProcessBuilder("stty", "raw").inheritIO().start().waitFor();
+        // int[] r2 = new int[2];
+        // try {
+        //     r2[0] = System.in.read();
+        //     r2[1] = System.in.read();
+        // } finally {
+        //     new ProcessBuilder("stty", sttySettings).inheritIO().start().waitFor();
+        // }
+        // System.out.println(Arrays.toString(r2));
     }
 }
