@@ -5,15 +5,18 @@ import JCultureOL.InterruptableInputHandler;
 
 public class Test {
     public static void main(String[] args) throws Exception {
+        // System.out.print("c\u001b[Dd\r\n");
         // System.out.println("\u0001fb2f");
         InterruptableInputHandler inputh = new InterruptableInputHandler(System.in, System.out);
-        // inputh.makeRaw();
-        inputh.setRaw();
+        inputh.makeRaw();
+        // inputh.setRaw();
+        String line;
         try {
-            System.out.println(inputh.readLine());
+            line = inputh.readLine();
         } finally {
-            // inputh.unmakeRaw();
+            inputh.unmakeRaw();
         }
+        System.out.println(line);
         // Process proc = new ProcessBuilder("stty", "-g").redirectInput(Redirect.INHERIT).start();
         // String sttySettings = new String(proc.getInputStream().readAllBytes());
         // new ProcessBuilder("stty", "raw").inheritIO().start().waitFor();

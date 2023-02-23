@@ -147,12 +147,19 @@ public class InterruptableInputHandler {
         return result;
     }
     private void redisplayLine(String prompt, StringBuilder cinput, int curpos) throws IOException {
-        drain.write(new byte[]{0x1b, '[', 'G', 0x1b, '[', 2, 'K'}); // reset line and put cursor at left edge
-        drain.write(Integer.toString(curpos).getBytes()); // TODO: cursor debug
+        drain.write(new byte[]{0x1b, '[', '8', 'm', 0x1b, '[', '2', 'K', 13}); // reset line and put cursor at left edge
+        // drain.write(new byte[]{0x1b, '[', '6', 'n'});
         byte[] pbytes = prompt.getBytes();
         drain.write(pbytes); // write the prompt
         cinput.chars().forEach(n->{try{drain.write(n);}catch(IOException e){}}); // write the input currently entered
-        drain.write(new byte[]{0x1b, '[', (byte)(curpos + pbytes.length), 'G'});
+        // int dif = cinput.length()-curpos;
+        // if (dif > 0) {
+        //     drain.write(new byte[]{0x1b, '[', (byte)(dif), 'D'});
+        // }
+        // drain.write(Integer.toString(curpos).getBytes()); // TODO: cursor debug
+        drain.write(new byte[]{0x1b, '['});
+        drain.write(Integer.toString(curpos + pbytes.length + 1).getBytes());
+        drain.write(new byte[]{'G', 0x1b, '[', '2', '8', 'm'});
         drain.flush();
     }
     /**
@@ -176,7 +183,7 @@ public class InterruptableInputHandler {
         while (true) {
             if (gotten == '\n' || gotten == '\r') { // handle end of line
                 if (rawterm) { // raw mode will not show user input in the terminal's output
-                    drain.write('\n');
+                    drain.write(new byte[]{10, 13});
                 } else if (gotten == '\r') {
                     source.read(); // when not in raw mode, '\r' is always followed by '\n' which must also be read
                 }
@@ -205,6 +212,9 @@ public class InterruptableInputHandler {
                         case ('C'): // (CUR RIGHT) move cursor right for text editing
                             if (curpos < sb.length()) {
                                 curpos ++;
+                                if (rawterm) {
+                                    redisplayLine(prompt, sb, curpos);
+                                }
                             } else {
                                 signalInvalid();
                             }
@@ -212,6 +222,9 @@ public class InterruptableInputHandler {
                         case ('D'): // (CUR LEFT) move cursor left for text editing
                             if (curpos > 0) {
                                 curpos --;
+                                if (rawterm) {
+                                    redisplayLine(prompt, sb, curpos);
+                                }
                             } else {
                                 signalInvalid();
                             }
@@ -222,9 +235,10 @@ public class InterruptableInputHandler {
                         default: // unrecognized, do nothing
                             break;
                     }
-                    if (rawterm) {
-                        redisplayLine(prompt, sb, curpos);
-                    }
+                    gotten = getChar();
+                    // if (rawterm) {
+                    //     redisplayLine(prompt, sb, curpos);
+                    // }
                 }
                 continue;
             }
@@ -238,17 +252,18 @@ public class InterruptableInputHandler {
                 if (rawterm) {
                     redisplayLine(prompt, sb, curpos);
                 }
+                gotten = getChar();
                 continue;
             }
             sb.insert(curpos, (char)gotten);
             curpos ++;
             if (rawterm) {
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+                // try {
+                //     Thread.sleep(500);
+                // } catch (InterruptedException e) {
+                //     // TODO Auto-generated catch block
+                //     e.printStackTrace();
+                // }
                 redisplayLine(prompt, sb, curpos);
             }
             gotten = getChar();
@@ -282,6 +297,10 @@ public class InterruptableInputHandler {
             proc.waitFor();
         } catch (InterruptedException E) {}
         sttySettings = new String(proc.getInputStream().readAllBytes());
+        // System.out.println(new String(new ProcessBuilder("stty", "-g").redirectInput(Redirect.INHERIT).start().getInputStream().readAllBytes()));
+        try {
+            new ProcessBuilder("stty", "raw").inheritIO().start().waitFor();
+        } catch (InterruptedException E) {}
         setRaw();
     }
     /**
