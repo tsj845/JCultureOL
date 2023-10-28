@@ -36,6 +36,11 @@ public class InterruptableInputHandler {
         this.drain = drain;
         this.interrupted = interrupted;
     }
+    public void println(String line) throws Exception {
+        drain.write(line.getBytes());
+        drain.write(13);
+        drain.write(10);
+    }
     /**
      * used to signal to the user that an invalid input was made, such as attempting to move the cursor left when at the start of the line
      * @throws IOException
@@ -147,7 +152,7 @@ public class InterruptableInputHandler {
         return result;
     }
     private void redisplayLine(String prompt, StringBuilder cinput, int curpos) throws IOException {
-        drain.write(new byte[]{0x1b, '[', '8', 'm', 0x1b, '[', '2', 'K', 13}); // reset line and put cursor at left edge
+        drain.write(new byte[]{0x1b, '[', '2', 'K', 13}); // reset line and put cursor at left edge
         // drain.write(new byte[]{0x1b, '[', '6', 'n'});
         byte[] pbytes = prompt.getBytes();
         drain.write(pbytes); // write the prompt
@@ -159,7 +164,7 @@ public class InterruptableInputHandler {
         // drain.write(Integer.toString(curpos).getBytes()); // TODO: cursor debug
         drain.write(new byte[]{0x1b, '['});
         drain.write(Integer.toString(curpos + pbytes.length + 1).getBytes());
-        drain.write(new byte[]{'G', 0x1b, '[', '2', '8', 'm'});
+        drain.write('G');
         drain.flush();
     }
     /**
